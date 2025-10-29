@@ -36,12 +36,19 @@ Regras:
       data?.output ||
       JSON.stringify(data);
 
-    // --- Tentar converter JSON mesmo que venha truncado ---
-    let parsed;
+    // Limpar caracteres e quebras de linha
+    const cleaned = text
+      .replace(/\\n/g, " ")
+      .replace(/\s+/g, " ")
+      .replace(/“|”/g, '"')
+      .trim();
+
+    // Tentar extrair JSON válido
+    let parsed = null;
     try {
-      parsed = JSON.parse(text);
+      parsed = JSON.parse(cleaned);
     } catch {
-      const match = text.match(/\{[\s\S]*\}/);
+      const match = cleaned.match(/\{[\s\S]*\}/);
       if (match) {
         try {
           parsed = JSON.parse(match[0]);
@@ -51,9 +58,15 @@ Regras:
       }
     }
 
-    // --- Normalizar chaves em PT/EN ---
-    if (parsed && parsed.questões && !parsed.questions) parsed.questions = parsed.questões;
-    if (parsed && parsed.questoes && !parsed.questions) parsed.questions = parsed.questoes;
+    // Normalizar chaves em PT/EN
+    if (parsed) {
+      parsed.questions =
+        parsed.questions ||
+        parsed.questoes ||
+        parsed["questões"] ||
+        parsed.perguntas ||
+        [];
+    }
 
     if (Array.isArray(parsed?.questions)) {
       parsed.questions = parsed.questions.map((q) => ({
@@ -64,14 +77,18 @@ Regras:
       }));
     }
 
-    if (!parsed || !Array.isArray(parsed.questions)) {
-      return res
-        .status(500)
-        .json({ error: "Resposta inválida da IA", raw: text.slice(0, 400) });
+    // Verificar se tem perguntas válidas
+    if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
+      return res.status(500).json({
+        error: "Resposta inválida da IA",
+        raw: cleaned.slice(0, 500),
+      });
     }
 
+    // Enviar resposta limpa
     res.status(200).json(parsed);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 }
+
