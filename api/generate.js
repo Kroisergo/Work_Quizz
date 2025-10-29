@@ -1,24 +1,26 @@
 export default async function handler(req, res) {
-  const { topic, type } = req.query;
+  const { topic = "História", type = "mc", n = 5 } = req.query;
 
   const prompt = `
-Gera um JSON ESTRITO em português de Portugal com este formato:
+Gera um JSON ESTRITO em português de Portugal com o seguinte formato:
 {
   "questions": [
-    ${type === "mc"
-      ? '{"type":"mc","prompt":"texto","options":["A","B","C"],"answer":0}'
-      : '{"type":"fill","prompt":"frase com ___","answer":"resposta"}'}
+    ${
+      type === "mc"
+        ? '{"type":"mc","prompt":"texto","options":["A","B","C"],"answer":0}'
+        : '{"type":"fill","prompt":"frase com ___","answer":"resposta"}'
+    }
   ]
 }
 Regras:
 - Tema: ${topic}
-- 5 perguntas
+- ${n} perguntas (entre 3 e 10)
 - Português de Portugal
-- Não escrevas nada fora do JSON.
+- Não escrevas nada fora do JSON
 `;
 
   try {
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+    const r = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -30,75 +32,42 @@ Regras:
       }),
     });
 
-    const data = await response.json();
-    const rawText =
-      data?.choices?.[0]?.message?.content ||
-      data?.output ||
-      JSON.stringify(data);
+    const data = await r.json();
+    const raw = data?.choices?.[0]?.message?.content || "";
 
-    // 1️⃣ Limpar sequências \n, aspas e espaços
-    let cleaned = rawText
-      .replace(/\\n/g, " ")
-      .replace(/\n/g, " ")
-      .replace(/\r/g, "")
-      .replace(/“|”/g, '"')
-      .replace(/‘|’/g, "'")
-      .replace(/\s+/g, " ")
-      .trim();
-
-    // 2️⃣ Se vier com aspas duplas escapadas (\"), tenta limpar
-    if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
-      cleaned = cleaned.slice(1, -1);
-    }
-    cleaned = cleaned.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
-
-    // 3️⃣ Tentar extrair JSON válido
-    let parsed = null;
+    let parsed;
     try {
-      parsed = JSON.parse(cleaned);
+      parsed = JSON.parse(raw);
     } catch {
+      const cleaned = raw.replace(/\\"/g, '"').replace(/[\u0000-\u001F]/g, "");
       const match = cleaned.match(/\{[\s\S]*\}/);
-      if (match) {
-        try {
-          parsed = JSON.parse(match[0]);
-        } catch {
-          parsed = null;
-        }
-      }
+      if (match) parsed = JSON.parse(match[0]);
     }
 
-    // --- 4️⃣ Normalizar campos PT/EN e evitar duplicações ---
-if (parsed) {
-  // se existir "perguntas" e "questions", escolhe o maior (com mais itens)
-  const perguntas =
-    parsed.perguntas || parsed.questoes || parsed["questões"] || [];
-  const questions = parsed.questions || [];
-
-  parsed.questions =
-    perguntas.length > questions.length ? perguntas : questions;
-}
-
-if (Array.isArray(parsed?.questions)) {
-  parsed.questions = parsed.questions.map((q) => ({
-    type: q.type || q.tipo || "mc",
-    prompt: q.prompt || q.pergunta || q.enunciado || "",
-    options: q.options || q.opcoes || q.opções || [],
-    answer: q.answer ?? q.resposta ?? 0,
-  }));
-}
-
-
-    // 5️⃣ Validar resultado
-    if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
-      return res.status(500).json({
-        error: "Resposta inválida da IA",
-        raw: cleaned.slice(0, 700),
-      });
+    // Normalizar campos PT/EN
+    if (parsed) {
+      const perguntas =
+        parsed.perguntas || parsed.questoes || parsed["questões"] || [];
+      const questions = parsed.questions || [];
+      parsed.questions =
+        perguntas.length > questions.length ? perguntas : questions;
     }
 
-    // 6️⃣ Enviar resposta final
+    if (!Array.isArray(parsed?.questions))
+      throw new Error("Resposta inválida da IA");
+
+    parsed.questions = parsed.questions.map((q) => ({
+      type: q.type || q.tipo || "mc",
+      prompt: q.prompt || q.pergunta || q.enunciado || "",
+      options: q.options || q.opcoes || q.opções || [],
+      answer: q.answer ?? q.resposta ?? 0,
+    }));
+
     res.status(200).json(parsed);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({
+      error: "Resposta inválida da IA",
+      raw: err.message,
+    });
   }
 }

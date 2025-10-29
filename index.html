@@ -1,26 +1,51 @@
 <!DOCTYPE html>
 <html lang="pt-PT">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quiz com IA</title>
-    <link rel="stylesheet" href="/style.css" />
-  </head>
-  <body>
-    <div class="container">
-      <h1>Quiz com IA</h1>
-      <p>Escreve um tema e gera perguntas automaticamente (PT-PT):</p>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz com IA</title>
+  <link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🎓 Quiz com IA</h1>
+      <p>Cria quizzes automáticos em português de Portugal, com IA.</p>
+    </header>
 
-      <input id="topic" placeholder="Ex: Sistema Solar" />
-      <select id="type">
-        <option value="mc">Múltipla escolha</option>
-        <option value="fill">Preencher espaço</option>
-      </select>
-      <button id="generate">Gerar Perguntas</button>
+    <section id="wizard">
+      <div id="step1" class="card">
+        <h2>1️⃣ Informações</h2>
+        <input id="title" placeholder="Título do Quiz" />
+        <input id="topic" placeholder="Tema (ex: Sistema Solar)" />
+        <select id="type">
+          <option value="mc">Múltipla escolha</option>
+          <option value="fill">Preencher espaço</option>
+        </select>
+        <input id="num" type="number" min="3" max="10" value="5" />
+        <button id="next1">Guardar & Continuar</button>
+      </div>
 
-      <pre id="output"></pre>
-    </div>
+      <div id="step2" class="card hidden">
+        <h2>2️⃣ Gerar Perguntas</h2>
+        <button id="generate">⚡ Gerar com IA</button>
+        <button id="manual">➕ Adicionar manualmente</button>
+        <pre id="output"></pre>
+        <button id="next2">Revisar</button>
+      </div>
 
-    <script type="module" src="/main.js"></script>
-  </body>
+      <div id="step3" class="card hidden">
+        <h2>3️⃣ Revisão do Quiz</h2>
+        <div id="playArea"></div>
+        <button id="finish">✅ Concluir & Guardar</button>
+      </div>
+    </section>
+
+    <footer>
+      <p>Protótipo académico — IA generativa com OpenRouter</p>
+    </footer>
+  </div>
+
+  <script type="module" src="/main.js"></script>
+</body>
 </html>

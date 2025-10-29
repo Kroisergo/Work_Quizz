@@ -6,27 +6,42 @@ body {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
+  min-height: 100vh;
 }
+
 .container {
+  max-width: 800px;
+  padding: 20px;
   text-align: center;
-  max-width: 600px;
 }
+
+.card {
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 20px;
+  border-radius: 12px;
+  margin-top: 20px;
+}
+
 input, select, button {
   margin: 8px;
   padding: 10px;
   border-radius: 8px;
   border: 1px solid #3b82f6;
 }
+
 button {
   background: #3b82f6;
   color: white;
   cursor: pointer;
 }
+
+.hidden { display: none; }
+
 pre {
+  text-align: left;
   background: rgba(255,255,255,0.05);
   border-radius: 10px;
   padding: 12px;
-  text-align: left;
   white-space: pre-wrap;
 }
