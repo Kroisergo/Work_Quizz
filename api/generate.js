@@ -36,8 +36,8 @@ Regras:
       data?.output ||
       JSON.stringify(data);
 
-    // --- 1. Limpeza inicial ---
-    const cleaned = rawText
+    // 1️⃣ Limpar sequências \n, aspas e espaços
+    let cleaned = rawText
       .replace(/\\n/g, " ")
       .replace(/\n/g, " ")
       .replace(/\r/g, "")
@@ -46,7 +46,13 @@ Regras:
       .replace(/\s+/g, " ")
       .trim();
 
-    // --- 2. Extrair apenas o JSON ---
+    // 2️⃣ Se vier com aspas duplas escapadas (\"), tenta limpar
+    if (cleaned.startsWith('"') && cleaned.endsWith('"')) {
+      cleaned = cleaned.slice(1, -1);
+    }
+    cleaned = cleaned.replace(/\\"/g, '"').replace(/\\\\/g, "\\");
+
+    // 3️⃣ Tentar extrair JSON válido
     let parsed = null;
     try {
       parsed = JSON.parse(cleaned);
@@ -61,7 +67,7 @@ Regras:
       }
     }
 
-    // --- 3. Normalizar campos em português ---
+    // 4️⃣ Normalizar campos PT-PT
     if (parsed) {
       parsed.questions =
         parsed.questions ||
@@ -80,15 +86,15 @@ Regras:
       }));
     }
 
-    // --- 4. Validar estrutura final ---
+    // 5️⃣ Validar resultado
     if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
       return res.status(500).json({
         error: "Resposta inválida da IA",
-        raw: cleaned.slice(0, 600),
+        raw: cleaned.slice(0, 700),
       });
     }
 
-    // --- 5. Sucesso ---
+    // 6️⃣ Enviar resposta final
     res.status(200).json(parsed);
   } catch (err) {
     res.status(500).json({ error: err.message });
