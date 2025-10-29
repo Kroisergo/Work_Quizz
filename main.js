@@ -21,68 +21,46 @@ Regras:
 `;
 
   try {
-    let text = "";
+    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer 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", // ⚠️ mete aqui a tua chave
+      },
+      body: JSON.stringify({
+        model: "mistralai/mixtral-8x7b-instruct", // modelo gratuito e rápido
+        messages: [{ role: "user", content: prompt }],
+      }),
+    });
 
-    // 🚀 Pollinations primeiro
+    const data = await res.json();
+    console.log("Resposta OpenRouter:", data);
+
+    const text =
+      data?.choices?.[0]?.message?.content ||
+      data?.output ||
+      JSON.stringify(data);
+
+    let parsed;
     try {
-      const res = await fetch("https://text.pollinations.ai/openai", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          model: "openai",
-          messages: [{ role: "user", content: prompt }],
-        }),
-      });
-      text = await res.text();
-    } catch (err) {
-      console.warn("⚠️ Pollinations falhou:", err.message);
-    }
-
-    // 🔁 Fallback Hugging Face se Pollinations não respondeu
-    if (!text || text.length < 30 || !text.includes("{")) {
-      console.warn("⚙️ A usar Hugging Face como fallback...");
-      const hfRes = await fetch(
-        "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ inputs: prompt }),
-        }
-      );
-      const hfData = await hfRes.json();
-      text =
-        hfData?.[0]?.generated_text ||
-        hfData?.generated_text ||
-        JSON.stringify(hfData);
-    }
-
-    // 🔍 Mostra na página o texto cru recebido
-    output.textContent =
-      "🧠 Resposta recebida da IA:\n\n" + text + "\n\nA tentar converter para JSON...";
-
-    // 🧩 Extrair JSON
-    let data;
-    try {
-      data = JSON.parse(text);
+      parsed = JSON.parse(text);
     } catch {
       const match = text.match(/\{[\s\S]*\}/);
-      if (match) data = JSON.parse(match[0]);
+      if (match) parsed = JSON.parse(match[0]);
     }
 
-    if (!data || !Array.isArray(data.questions)) {
-      throw new Error("❌ Ainda não é JSON válido (sem campo questions).");
+    if (!parsed || !Array.isArray(parsed.questions)) {
+      throw new Error("Resposta inválida: " + text.slice(0, 200));
     }
 
-    output.textContent =
-      "✅ Perguntas geradas com sucesso:\n\n" +
-      JSON.stringify(data, null, 2);
+    output.textContent = JSON.stringify(parsed, null, 2);
   } catch (err) {
-    console.error("Erro final:", err);
+    console.error("Erro:", err);
     output.innerHTML = `
 ⚠️ <strong>Erro ao gerar perguntas.</strong><br><br>
 ${err.message}<br><br>
-🧩 Isto ajuda: verifica no texto acima se veio algum JSON parcial.<br><br>
-💡 Copia o conteúdo e mostra-me aqui.
+💡 Confirma se a tua API Key do OpenRouter está correta.<br>
+Podes criar uma gratuita em <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>.
 `;
   }
 });
