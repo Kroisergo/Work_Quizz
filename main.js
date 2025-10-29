@@ -102,7 +102,8 @@ document.querySelector("#manual").onclick = () => {
       manualOptionsArea.appendChild(opt);
     }
   } else {
-    manualOptionsArea.innerHTML = "<p class='muted'>Preenche apenas o enunciado e a resposta correta.</p>";
+    manualOptionsArea.innerHTML =
+      "<p class='muted'>Preenche apenas o enunciado e a resposta correta.</p>";
   }
 };
 
@@ -160,7 +161,7 @@ function renderQuiz() {
   });
 }
 
-// ---- Guardar ----
+// ---- Guardar Quiz ----
 document.querySelector("#finish").onclick = () => {
   const quizzes = JSON.parse(localStorage.getItem("saved_quizzes") || "[]");
   quizzes.push(quiz);
@@ -169,6 +170,7 @@ document.querySelector("#finish").onclick = () => {
   setTimeout(() => location.reload(), 1000);
 };
 
+// ---- Render e apagar quizzes ----
 function renderSaved() {
   const list = document.querySelector("#savedList");
   const quizzes = JSON.parse(localStorage.getItem("saved_quizzes") || "[]");
@@ -176,20 +178,55 @@ function renderSaved() {
     list.innerHTML = "<p>Sem quizzes guardados.</p>";
     return;
   }
+
   list.innerHTML = "";
-  quizzes.forEach((q) => {
+  quizzes.forEach((q, index) => {
     const card = document.createElement("div");
     card.className = "card";
-    card.innerHTML = `<h3>${q.title}</h3><p>${q.topic} • ${q.questions.length} perguntas</p>`;
-    const btn = document.createElement("button");
-    btn.textContent = "Jogar";
-    btn.onclick = () => {
+    card.innerHTML = `
+      <h3>${q.title}</h3>
+      <p>${q.topic} • ${q.questions.length} perguntas</p>
+    `;
+
+    // botão para jogar
+    const playBtn = document.createElement("button");
+    playBtn.textContent = "▶️ Jogar";
+    playBtn.onclick = () => {
       quiz = q;
       savedSection.classList.add("hidden");
       renderQuiz();
       step3.classList.remove("hidden");
     };
-    card.appendChild(btn);
+
+    // botão para apagar
+    const delBtn = document.createElement("button");
+    delBtn.textContent = "🗑️ Apagar";
+    delBtn.style.background = "#ef4444";
+    delBtn.onclick = () => {
+      if (confirm(`Apagar o quiz "${q.title}"?`)) {
+        quizzes.splice(index, 1);
+        localStorage.setItem("saved_quizzes", JSON.stringify(quizzes));
+        renderSaved();
+        showToast("Quiz apagado!");
+      }
+    };
+
+    card.appendChild(playBtn);
+    card.appendChild(delBtn);
     list.appendChild(card);
   });
+
+  // botão para apagar tudo
+  const clearAll = document.createElement("button");
+  clearAll.textContent = "❌ Apagar todos os quizzes";
+  clearAll.style.background = "#b91c1c";
+  clearAll.style.marginTop = "10px";
+  clearAll.onclick = () => {
+    if (confirm("Tens a certeza que queres apagar todos os quizzes?")) {
+      localStorage.removeItem("saved_quizzes");
+      renderSaved();
+      showToast("Todos os quizzes foram apagados!");
+    }
+  };
+  list.appendChild(clearAll);
 }
