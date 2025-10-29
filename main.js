@@ -25,7 +25,7 @@ Regras:
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer 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", // ⚠️ mete aqui a tua chave
+        "Authorization": "Bearer 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", // ⚠️ mete aqui a tua chave
       },
       body: JSON.stringify({
         model: "mistralai/mixtral-8x7b-instruct", // modelo gratuito e rápido
