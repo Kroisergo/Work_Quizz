@@ -67,24 +67,26 @@ Regras:
       }
     }
 
-    // 4️⃣ Normalizar campos PT-PT
-    if (parsed) {
-      parsed.questions =
-        parsed.questions ||
-        parsed.questoes ||
-        parsed["questões"] ||
-        parsed.perguntas ||
-        [];
-    }
+    // --- 4️⃣ Normalizar campos PT/EN e evitar duplicações ---
+if (parsed) {
+  // se existir "perguntas" e "questions", escolhe o maior (com mais itens)
+  const perguntas =
+    parsed.perguntas || parsed.questoes || parsed["questões"] || [];
+  const questions = parsed.questions || [];
 
-    if (Array.isArray(parsed?.questions)) {
-      parsed.questions = parsed.questions.map((q) => ({
-        type: q.type || q.tipo || "mc",
-        prompt: q.prompt || q.pergunta || q.enunciado || "",
-        options: q.options || q.opcoes || q.opções || [],
-        answer: q.answer ?? q.resposta ?? 0,
-      }));
-    }
+  parsed.questions =
+    perguntas.length > questions.length ? perguntas : questions;
+}
+
+if (Array.isArray(parsed?.questions)) {
+  parsed.questions = parsed.questions.map((q) => ({
+    type: q.type || q.tipo || "mc",
+    prompt: q.prompt || q.pergunta || q.enunciado || "",
+    options: q.options || q.opcoes || q.opções || [],
+    answer: q.answer ?? q.resposta ?? 0,
+  }));
+}
+
 
     // 5️⃣ Validar resultado
     if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
