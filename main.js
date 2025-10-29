@@ -21,21 +21,26 @@ Regras:
 `;
 
   try {
-    // 1️⃣ Primeiro tenta Pollinations
-    const pollRes = await fetch("https://text.pollinations.ai/openai", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        model: "openai",
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+    let text = "";
 
-    let text = await pollRes.text();
+    // 🚀 Pollinations primeiro
+    try {
+      const res = await fetch("https://text.pollinations.ai/openai", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          model: "openai",
+          messages: [{ role: "user", content: prompt }],
+        }),
+      });
+      text = await res.text();
+    } catch (err) {
+      console.warn("⚠️ Pollinations falhou:", err.message);
+    }
 
-    // 2️⃣ Se a Pollinations falhar, usa Hugging Face
-    if (!text || text.length < 50 || !text.includes("{")) {
-      console.warn("⚠️ Pollinations falhou, a usar Hugging Face…");
+    // 🔁 Fallback Hugging Face se Pollinations não respondeu
+    if (!text || text.length < 30 || !text.includes("{")) {
+      console.warn("⚙️ A usar Hugging Face como fallback...");
       const hfRes = await fetch(
         "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1",
         {
@@ -45,12 +50,17 @@ Regras:
         }
       );
       const hfData = await hfRes.json();
-      text = hfData[0]?.generated_text || "";
+      text =
+        hfData?.[0]?.generated_text ||
+        hfData?.generated_text ||
+        JSON.stringify(hfData);
     }
 
-    console.log("🧠 Resposta IA:", text);
+    // 🔍 Mostra na página o texto cru recebido
+    output.textContent =
+      "🧠 Resposta recebida da IA:\n\n" + text + "\n\nA tentar converter para JSON...";
 
-    // 3️⃣ Extrai JSON da resposta
+    // 🧩 Extrair JSON
     let data;
     try {
       data = JSON.parse(text);
@@ -60,17 +70,19 @@ Regras:
     }
 
     if (!data || !Array.isArray(data.questions)) {
-      throw new Error("Resposta inválida da IA");
+      throw new Error("❌ Ainda não é JSON válido (sem campo questions).");
     }
 
-    output.textContent = JSON.stringify(data, null, 2);
+    output.textContent =
+      "✅ Perguntas geradas com sucesso:\n\n" +
+      JSON.stringify(data, null, 2);
   } catch (err) {
-    console.error(err);
+    console.error("Erro final:", err);
     output.innerHTML = `
-⚠️ <strong>Erro ao gerar perguntas.</strong><br>
-O servidor de IA pode estar offline.<br><br>
+⚠️ <strong>Erro ao gerar perguntas.</strong><br><br>
 ${err.message}<br><br>
-💡 Tenta de novo ou usa o modo manual.
+🧩 Isto ajuda: verifica no texto acima se veio algum JSON parcial.<br><br>
+💡 Copia o conteúdo e mostra-me aqui.
 `;
   }
 });
