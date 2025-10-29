@@ -113,6 +113,59 @@ pre {
 
 .toast.show { opacity: 1; }
 
+.warn {
+  background: #ef4444;
+  border: 1px solid #b91c1c;
+}
+
+.warn:hover {
+  background: #dc2626;
+}
+
+#manualArea {
+  margin-top: 20px;
+  background: rgba(255,255,255,0.05);
+  padding: 14px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.manual-field {
+  display: flex;
+  flex-direction: column;
+  margin: 8px 0;
+  text-align: left;
+}
+
+.manual-field label {
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+
+.choice-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.choice-row input[type="text"] {
+  flex: 1;
+}
+
+.add-choice {
+  background: transparent;
+  color: var(--btn);
+  border: 1px dashed var(--btn);
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 6px;
+}
+
+.add-choice:hover {
+  background: rgba(59,130,246,0.1);
+}
+
 @media (max-width: 600px) {
   input, select, button { width: 90%; }
   .card { padding: 14px; }

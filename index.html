@@ -38,6 +38,13 @@
           <button id="manual">➕ Adicionar manualmente</button>
         </div>
         <pre id="output"></pre>
+
+        <div id="manualArea" class="hidden">
+          <h3>✏️ Criar pergunta manualmente</h3>
+          <div id="manualForm"></div>
+          <button id="saveManual" class="btn">💾 Guardar pergunta</button>
+        </div>
+
         <button id="next2">Revisar</button>
       </div>
 
@@ -51,7 +58,10 @@
     <section id="savedSection" class="hidden">
       <h2>💾 Meus Quizzes</h2>
       <div id="savedList"></div>
-      <button id="backHome">⬅️ Voltar</button>
+      <div class="btn-group">
+        <button id="backHome">⬅️ Voltar</button>
+        <button id="clearAll" class="warn">🗑️ Apagar todos</button>
+      </div>
     </section>
 
     <div id="toast" class="toast hidden"></div>
