@@ -21,8 +21,8 @@ Regras:
 `;
 
   try {
-    // 🔹 Pollinations API (sem chave)
-    const response = await fetch("https://text.pollinations.ai/openai", {
+    // 1️⃣ Primeiro tenta Pollinations
+    const pollRes = await fetch("https://text.pollinations.ai/openai", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
@@ -31,9 +31,26 @@ Regras:
       }),
     });
 
-    const text = await response.text();
-    console.log("Resposta da IA:", text);
+    let text = await pollRes.text();
 
+    // 2️⃣ Se a Pollinations falhar, usa Hugging Face
+    if (!text || text.length < 50 || !text.includes("{")) {
+      console.warn("⚠️ Pollinations falhou, a usar Hugging Face…");
+      const hfRes = await fetch(
+        "https://api-inference.huggingface.co/models/mistralai/Mixtral-8x7B-Instruct-v0.1",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ inputs: prompt }),
+        }
+      );
+      const hfData = await hfRes.json();
+      text = hfData[0]?.generated_text || "";
+    }
+
+    console.log("🧠 Resposta IA:", text);
+
+    // 3️⃣ Extrai JSON da resposta
     let data;
     try {
       data = JSON.parse(text);
@@ -49,9 +66,11 @@ Regras:
     output.textContent = JSON.stringify(data, null, 2);
   } catch (err) {
     console.error(err);
-    output.textContent =
-      "⚠️ Erro ao gerar perguntas. O servidor Pollinations pode estar offline.\n\n" +
-      err.message +
-      "\n\n💡 Tenta de novo ou usa o modo manual.";
+    output.innerHTML = `
+⚠️ <strong>Erro ao gerar perguntas.</strong><br>
+O servidor de IA pode estar offline.<br><br>
+${err.message}<br><br>
+💡 Tenta de novo ou usa o modo manual.
+`;
   }
 });
