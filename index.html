@@ -155,7 +155,7 @@
         <div id="step2" style="display:none">
           <div class="card" style="margin-bottom:12px">
             <strong>Gerar perguntas com IA</strong>
-            <div class="muted" style="margin:6px 0">Usa Pollinations (sem chave), com retentativas automáticas.</div>
+            <div class="muted" style="margin:6px 0">Usa Pollinations (sem chave), com retentativas e proxies automáticos.</div>
             <div class="actions">
               <button class="btn primary" id="genBtn">Gerar com IA</button>
               <button class="btn" id="addManual">Adicionar manualmente</button>
@@ -196,7 +196,7 @@
       </div>
     </section>
 
-    <div class="footer">Protótipo académico — IA generativa (Pollinations). Publicável em Vercel/Netlify.</div>
+    <div class="footer">Protótipo académico — IA generativa (Pollinations c/ proxies). Publicável em Vercel/Netlify.</div>
   </div>
 
 <script>
@@ -231,9 +231,7 @@ $('#startNew').onclick = ()=>{ startWizard() }
 $('#backHome').onclick = ()=>{ showHome() }
 $('#clearAll').onclick = ()=>{ if(confirm('Apagar todos os quizzes guardados?')){ state.quizzes=[]; saveAll(); renderSaved(); updateStats() } }
 
-$('#configBtn').onclick = ()=>{
-  const p = $('#configPanel'); p.style.display = (p.style.display==='block')? 'none':'block'
-}
+$('#configBtn').onclick = ()=>{ const p = $('#configPanel'); p.style.display = (p.style.display==='block')? 'none':'block' }
 themeRadios().forEach(r=> r.addEventListener('change', ()=> applyTheme(r.value)))
 applyTheme(loadTheme())
 
@@ -423,26 +421,15 @@ function normalizeQuestions(arr, {topic,type,wantImages}){
   }).slice(0, Math.max(3, Math.min(10, state.current.n)))
 }
 
-async function getQuestionsViaAI({topic,n,type,wantImages}){
-  const prompt = systemPrompt(topic,n,type,wantImages)
-  const models = [
-    'llama3.1:70b',
-    'qwen2.5:32b',
-    'llama3.1:8b',
-    'mixtral'
-  ]
-  let lastErr
-  for(const m of models){
-    try{
-      const url = 'https://text.pollinations.ai/'+ encodeURIComponent(prompt) + `?model=${encodeURIComponent(m)}&temperature=0.3&top_p=0.9`
-      const txt = await fetchWithTimeout(url,{timeout:12000})
-      const json = extractJSON(txt)
-      if(json && Array.isArray(json.questions) && json.questions.length>0) return json
-      lastErr = new Error('JSON inválido')
-    }catch(e){ lastErr = e }
-  }
-  throw lastErr || new Error('Falha na geração')
+async function getQuestionsViaAI({topic,n,type,wantImages}) {
+  const base = location.origin; // usa o teu próprio domínio na Vercel
+  const url = `${base}/api/generate?topic=${encodeURIComponent(topic)}&n=${n}&type=${type}&withImages=${wantImages}`;
+  const txt = await fetchWithTimeout(url, { timeout: 20000 });
+  const json = extractJSON(txt);
+  if (!json || !Array.isArray(json.questions)) throw new Error("Resposta inválida");
+  return json;
 }
+
 
 function systemPrompt(topic,n,type,wantImages){
   const img = wantImages ? 'A propriedade "image" pode ser null ou URL.' : 'A propriedade "image" deve ser null.'
@@ -457,7 +444,7 @@ function systemPrompt(topic,n,type,wantImages){
 }
 Regras:
 - Tema: ${topic}
-- Número de perguntas: entre ${Math.max(3,n)} e ${Math.min(10,n)} (exatamente ${n})
+- Número de perguntas: ${n} (entre 3 e 10)
 - Tipo: ${type === 'mc' ? 'múltipla escolha' : 'preencher espaço (usa ___ no enunciado)'}
 - Português de Portugal (ortografia e vocabulário PT-PT)
 - Em múltipla escolha, devolve 3 ou 4 opções e "answer" é o índice correto (0-based)
