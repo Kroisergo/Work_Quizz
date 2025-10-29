@@ -23,7 +23,7 @@ Regras:
 `;
 
     // Chamada à API Pollinations em tempo real
-    const response = await fetch("https://text.pollinations.ai/", {
+    const response = await fetch("https://text.pollinations.ai/openai/gpt-4o-mini", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ model: "gpt-4o-mini", messages: [{ role: "user", content: prompt }] }),
