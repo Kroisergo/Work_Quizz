@@ -2,7 +2,7 @@
 <html lang="pt-PT">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Quiz com IA</title>
   <link rel="stylesheet" href="/style.css" />
 </head>
@@ -10,7 +10,11 @@
   <div class="container">
     <header>
       <h1>🎓 Quiz com IA</h1>
-      <p>Cria quizzes automáticos em português de Portugal, com IA.</p>
+      <nav>
+        <button id="homeBtn" class="nav-btn">🏠 Início</button>
+        <button id="savedBtn" class="nav-btn">💾 Meus Quizzes</button>
+        <button id="themeBtn" class="nav-btn">🌗 Mudar tema</button>
+      </nav>
     </header>
 
     <section id="wizard">
@@ -40,6 +44,14 @@
         <button id="finish">✅ Concluir & Guardar</button>
       </div>
     </section>
+
+    <section id="savedSection" class="hidden">
+      <h2>💾 Meus Quizzes</h2>
+      <div id="savedList"></div>
+      <button id="backHome">⬅️ Voltar</button>
+    </section>
+
+    <div id="toast" class="toast hidden"></div>
 
     <footer>
       <p>Protótipo académico — IA generativa com OpenRouter</p>
