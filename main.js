@@ -95,30 +95,49 @@ document.querySelector("#manual").onclick = () => {
   manualOptionsArea.innerHTML = "";
 
   if (quiz.type === "mc") {
-    for (let i = 1; i <= 3; i++) {
-      const opt = document.createElement("input");
-      opt.placeholder = `Opção ${i}`;
-      opt.className = "manualOpt";
-      manualOptionsArea.appendChild(opt);
-    }
+    for (let i = 0; i < 3; i++) addOptionField();
   } else {
     manualOptionsArea.innerHTML =
       "<p class='muted'>Preenche apenas o enunciado e a resposta correta.</p>";
   }
 };
 
+// criar campos de opções
+function addOptionField(value = "") {
+  const div = document.createElement("div");
+  div.className = "option-line";
+
+  const input = document.createElement("input");
+  input.placeholder = "Opção";
+  input.value = value;
+  input.className = "manualOpt";
+
+  const radio = document.createElement("input");
+  radio.type = "radio";
+  radio.name = "correctOpt";
+
+  div.appendChild(radio);
+  div.appendChild(input);
+  manualOptionsArea.appendChild(div);
+}
+
+// guardar pergunta manual
 document.querySelector("#saveManual").onclick = () => {
   const q = { type: quiz.type, prompt: manualPrompt.value.trim() };
   if (!q.prompt) return showToast("Escreve a pergunta!");
 
   if (quiz.type === "mc") {
-    const opts = Array.from(document.querySelectorAll(".manualOpt"))
+    const options = Array.from(document.querySelectorAll(".manualOpt"))
       .map((i) => i.value.trim())
       .filter(Boolean);
-    if (opts.length < 2) return showToast("Mínimo 2 opções!");
-    q.options = opts;
-    const ans = parseInt(manualAnswer.value) - 1;
-    q.answer = isNaN(ans) ? 0 : ans;
+    const radios = Array.from(document.querySelectorAll('input[name="correctOpt"]'));
+    const answerIndex = radios.findIndex((r) => r.checked);
+
+    if (options.length < 2) return showToast("Mínimo 2 opções!");
+    if (answerIndex === -1) return showToast("Escolhe a resposta correta!");
+
+    q.options = options;
+    q.answer = answerIndex;
   } else {
     q.answer = manualAnswer.value.trim() || "Resposta";
   }
@@ -128,7 +147,7 @@ document.querySelector("#saveManual").onclick = () => {
   showToast("Pergunta adicionada!");
   manualPrompt.value = "";
   manualAnswer.value = "";
-  manualOptionsArea.querySelectorAll("input").forEach((i) => (i.value = ""));
+  manualOptionsArea.innerHTML = "";
 };
 
 // ---- Revisão ----
