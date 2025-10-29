@@ -7,8 +7,7 @@ const savedSection = document.querySelector("#savedSection");
 const output = document.querySelector("#output");
 const toast = document.querySelector("#toast");
 
-// ----- utilidades -----
-function showToast(msg, type = "info") {
+function showToast(msg) {
   toast.textContent = msg;
   toast.className = "toast show";
   setTimeout(() => (toast.className = "toast hidden"), 2500);
@@ -18,7 +17,6 @@ function setTheme(t) {
   document.documentElement.classList.toggle("light", t === "light");
   localStorage.setItem("theme", t);
 }
-
 function loadTheme() {
   setTheme(localStorage.getItem("theme") || "dark");
 }
@@ -32,12 +30,10 @@ document.querySelector("#themeBtn").onclick = () => {
   showToast(`Tema: ${newT === "light" ? "claro" : "escuro"}`);
 };
 
-// ----- navegação -----
 document.querySelector("#homeBtn").onclick = () => {
   savedSection.classList.add("hidden");
   step1.classList.remove("hidden");
 };
-
 document.querySelector("#savedBtn").onclick = () => {
   renderSaved();
   savedSection.classList.remove("hidden");
@@ -45,13 +41,11 @@ document.querySelector("#savedBtn").onclick = () => {
   step2.classList.add("hidden");
   step3.classList.add("hidden");
 };
-
 document.querySelector("#backHome").onclick = () => {
   savedSection.classList.add("hidden");
   step1.classList.remove("hidden");
 };
 
-// ----- fluxo principal -----
 document.querySelector("#next1").onclick = () => {
   quiz.title = document.querySelector("#title").value.trim() || "Quiz";
   quiz.topic = document.querySelector("#topic").value.trim();
@@ -62,7 +56,8 @@ document.querySelector("#next1").onclick = () => {
   step2.classList.remove("hidden");
 };
 
-document.querySelector("#generate").onclick = async () => {
+// -------- IA: gerar perguntas --------
+async function generateQuestions() {
   output.textContent = "⏳ A gerar perguntas em tempo real...";
   try {
     const res = await fetch(
@@ -77,8 +72,39 @@ document.querySelector("#generate").onclick = async () => {
     output.innerHTML = `⚠️ Erro: ${err.message}`;
     showToast("Erro ao gerar perguntas");
   }
+}
+
+document.querySelector("#generate").onclick = generateQuestions;
+document.querySelector("#regenerate").onclick = () => {
+  if (!quiz.topic) return showToast("Define primeiro um tema!");
+  generateQuestions();
 };
 
+// -------- Adicionar manualmente --------
+document.querySelector("#manual").onclick = () => {
+  const q = {
+    type: quiz.type,
+    prompt: prompt("Texto da pergunta:") || "",
+  };
+
+  if (quiz.type === "mc") {
+    q.options = [];
+    for (let i = 0; i < 3; i++) {
+      const opt = prompt(`Opção ${i + 1}:`);
+      if (opt) q.options.push(opt);
+    }
+    const ans = parseInt(prompt("Qual é a opção correta? (1, 2 ou 3)")) - 1;
+    q.answer = isNaN(ans) ? 0 : ans;
+  } else {
+    q.answer = prompt("Resposta correta:") || "";
+  }
+
+  quiz.questions.push(q);
+  output.textContent = JSON.stringify(quiz.questions, null, 2);
+  showToast("Pergunta adicionada manualmente!");
+};
+
+// -------- Revisão --------
 document.querySelector("#next2").onclick = () => {
   if (quiz.questions.length === 0) return showToast("Ainda não há perguntas!");
   step2.classList.add("hidden");
@@ -124,7 +150,7 @@ function renderSaved() {
     return;
   }
   list.innerHTML = "";
-  quizzes.forEach((q, i) => {
+  quizzes.forEach((q) => {
     const card = document.createElement("div");
     card.className = "card";
     card.innerHTML = `<h3>${q.title}</h3><p>${q.topic} • ${q.questions.length} perguntas</p>`;

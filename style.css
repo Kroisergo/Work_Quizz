@@ -29,15 +29,18 @@ body {
 }
 
 .container {
+  width: 95%;
   max-width: 800px;
-  padding: 20px;
+  padding: 10px;
   text-align: center;
 }
 
 header {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
   align-items: center;
+  gap: 10px;
 }
 
 .nav-btn {
@@ -45,8 +48,8 @@ header {
   color: white;
   border: none;
   border-radius: 6px;
-  padding: 6px 10px;
-  margin-left: 4px;
+  padding: 8px 12px;
+  margin: 2px;
   cursor: pointer;
 }
 
@@ -64,6 +67,7 @@ input, select, button {
   padding: 10px;
   border-radius: 8px;
   border: 1px solid var(--btn);
+  font-size: 15px;
 }
 
 button {
@@ -73,9 +77,7 @@ button {
   transition: 0.2s;
 }
 
-button:hover {
-  opacity: 0.9;
-}
+button:hover { opacity: 0.9; }
 
 .hidden { display: none; }
 
@@ -85,6 +87,14 @@ pre {
   border-radius: 10px;
   padding: 12px;
   white-space: pre-wrap;
+  overflow-x: auto;
+}
+
+.btn-group {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 .toast {
@@ -101,11 +111,11 @@ pre {
   transition: opacity 0.3s ease;
 }
 
-.toast.show {
-  opacity: 1;
-}
+.toast.show { opacity: 1; }
 
 @media (max-width: 600px) {
-  header { flex-direction: column; }
-  .nav-btn { margin-top: 6px; }
+  input, select, button { width: 90%; }
+  .card { padding: 14px; }
+  h1 { font-size: 22px; }
+  h2 { font-size: 18px; }
 }
