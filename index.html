@@ -1,26 +1,35 @@
 <!DOCTYPE html>
-<html lang="pt-PT">
+<html lang="pt">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Quiz com IA</title>
-    <link rel="stylesheet" href="/style.css" />
+    <title>Quiz IA - Cultura Geral</title>
+    <link rel="stylesheet" href="style.css" />
   </head>
+
   <body>
-    <div class="container">
-      <h1>Quiz com IA</h1>
-      <p>Escreve um tema e gera perguntas automaticamente (PT-PT):</p>
+    <header>
+      <h1>🤖 Quiz IA - Cultura Geral</h1>
+      <p>Gera perguntas automáticas em português de Portugal.</p>
+    </header>
 
-      <input id="topic" placeholder="Ex: Sistema Solar" />
-      <select id="type">
-        <option value="mc">Múltipla escolha</option>
-        <option value="fill">Preencher espaço</option>
-      </select>
-      <button id="generate">Gerar Perguntas</button>
+    <main>
+      <!-- Botão para gerar perguntas -->
+      <div class="botoes">
+        <button id="btnGerar">Gerar Perguntas</button>
+      </div>
 
-      <pre id="output"></pre>
-    </div>
+      <!-- Área onde as perguntas aparecem -->
+      <div id="quiz" class="quiz-container">
+        <p>Clica em "Gerar Perguntas" para começar!</p>
+      </div>
+    </main>
 
-    <script type="module" src="/main.js"></script>
+    <footer>
+      <p>Feito com ❤️ e IA • Projeto Kroisergo</p>
+    </footer>
+
+    <!-- Script principal -->
+    <script type="module" src="main.js"></script>
   </body>
 </html>

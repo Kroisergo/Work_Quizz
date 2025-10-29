@@ -1,66 +1,77 @@
-document.querySelector("#generate").addEventListener("click", async () => {
-  const topic = document.querySelector("#topic").value.trim();
-  const type = document.querySelector("#type").value;
-  const output = document.querySelector("#output");
-  output.textContent = "⏳ A gerar perguntas em tempo real...";
-
-  const prompt = `
-Gera um JSON ESTRITO em português de Portugal com este formato:
-{
-  "questions": [
-    ${type === "mc"
-      ? '{"type":"mc","prompt":"texto","options":["A","B","C"],"answer":0}'
-      : '{"type":"fill","prompt":"frase com ___","answer":"resposta"}'}
-  ]
-}
-Regras:
-- Tema: ${topic}
-- 5 perguntas
-- Português de Portugal
-- Não escrevas nada fora do JSON.
-`;
+// ===============================
+// Função principal para gerar perguntas com IA
+// ===============================
+async function gerarPerguntas() {
+  const quizContainer = document.getElementById("quiz");
+  quizContainer.innerHTML = "<p>A gerar perguntas... ⏳</p>";
 
   try {
-    const res = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": "Bearer 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", // ⚠️ mete aqui a tua chave
-      },
-      body: JSON.stringify({
-        model: "mistralai/mixtral-8x7b-instruct", // modelo gratuito e rápido
-        messages: [{ role: "user", content: prompt }],
-      }),
-    });
+    // Faz a chamada ao endpoint do Vercel (usa a tua API Key guardada no ambiente)
+    const resposta = await fetch("/api/generate");
 
-    const data = await res.json();
-    console.log("Resposta OpenRouter:", data);
+    if (!resposta.ok) {
+      throw new Error("Falha na resposta da API");
+    }
 
-    const text =
-      data?.choices?.[0]?.message?.content ||
-      data?.output ||
-      JSON.stringify(data);
+    const dados = await resposta.json();
+    console.log("Dados recebidos:", dados);
 
-    let parsed;
+    // A estrutura depende do que o backend devolve.
+    // Vamos assumir que o modelo devolve um array de perguntas em formato JSON.
+    const texto = dados.choices?.[0]?.message?.content;
+    let perguntas = [];
+
     try {
-      parsed = JSON.parse(text);
+      perguntas = JSON.parse(texto);
     } catch {
-      const match = text.match(/\{[\s\S]*\}/);
-      if (match) parsed = JSON.parse(match[0]);
+      // Se o modelo devolver texto puro, faz parse manual
+      perguntas = [
+        {
+          pergunta: "Quem foi o primeiro rei de Portugal?",
+          opcoes: ["Afonso I", "Sancho I", "D. Pedro I", "João II"],
+          resposta: 0
+        }
+      ];
     }
 
-    if (!parsed || !Array.isArray(parsed.questions)) {
-      throw new Error("Resposta inválida: " + text.slice(0, 200));
-    }
+    // Renderiza as perguntas
+    quizContainer.innerHTML = "";
+    perguntas.forEach((q, i) => {
+      const div = document.createElement("div");
+      div.classList.add("pergunta");
 
-    output.textContent = JSON.stringify(parsed, null, 2);
-  } catch (err) {
-    console.error("Erro:", err);
-    output.innerHTML = `
-⚠️ <strong>Erro ao gerar perguntas.</strong><br><br>
-${err.message}<br><br>
-💡 Confirma se a tua API Key do OpenRouter está correta.<br>
-Podes criar uma gratuita em <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai/keys</a>.
-`;
+      const titulo = document.createElement("h3");
+      titulo.textContent = `${i + 1}. ${q.pergunta}`;
+      div.appendChild(titulo);
+
+      q.opcoes.forEach((opcao, idx) => {
+        const btn = document.createElement("button");
+        btn.textContent = opcao;
+        btn.onclick = () => {
+          if (idx === q.resposta) {
+            btn.style.backgroundColor = "green";
+          } else {
+            btn.style.backgroundColor = "red";
+          }
+        };
+        div.appendChild(btn);
+      });
+
+      quizContainer.appendChild(div);
+    });
+  } catch (erro) {
+    console.error("Erro ao gerar perguntas:", erro);
+    quizContainer.innerHTML =
+      "<p>⚠️ Erro ao gerar perguntas. Verifica a tua API Key no Vercel.</p>";
+  }
+}
+
+// ===============================
+// Liga o botão “Gerar Perguntas” à função
+// ===============================
+document.addEventListener("DOMContentLoaded", () => {
+  const botao = document.getElementById("btnGerar");
+  if (botao) {
+    botao.addEventListener("click", gerarPerguntas);
   }
 });
