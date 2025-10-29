@@ -31,19 +31,22 @@ Regras:
     });
 
     const data = await response.json();
-    const text =
+    const rawText =
       data?.choices?.[0]?.message?.content ||
       data?.output ||
       JSON.stringify(data);
 
-    // Limpar caracteres e quebras de linha
-    const cleaned = text
+    // --- 1. Limpeza inicial ---
+    const cleaned = rawText
       .replace(/\\n/g, " ")
-      .replace(/\s+/g, " ")
+      .replace(/\n/g, " ")
+      .replace(/\r/g, "")
       .replace(/“|”/g, '"')
+      .replace(/‘|’/g, "'")
+      .replace(/\s+/g, " ")
       .trim();
 
-    // Tentar extrair JSON válido
+    // --- 2. Extrair apenas o JSON ---
     let parsed = null;
     try {
       parsed = JSON.parse(cleaned);
@@ -58,7 +61,7 @@ Regras:
       }
     }
 
-    // Normalizar chaves em PT/EN
+    // --- 3. Normalizar campos em português ---
     if (parsed) {
       parsed.questions =
         parsed.questions ||
@@ -71,21 +74,21 @@ Regras:
     if (Array.isArray(parsed?.questions)) {
       parsed.questions = parsed.questions.map((q) => ({
         type: q.type || q.tipo || "mc",
-        prompt: q.prompt || q.pergunta || "",
+        prompt: q.prompt || q.pergunta || q.enunciado || "",
         options: q.options || q.opcoes || q.opções || [],
         answer: q.answer ?? q.resposta ?? 0,
       }));
     }
 
-    // Verificar se tem perguntas válidas
+    // --- 4. Validar estrutura final ---
     if (!parsed || !Array.isArray(parsed.questions) || parsed.questions.length === 0) {
       return res.status(500).json({
         error: "Resposta inválida da IA",
-        raw: cleaned.slice(0, 500),
+        raw: cleaned.slice(0, 600),
       });
     }
 
-    // Enviar resposta limpa
+    // --- 5. Sucesso ---
     res.status(200).json(parsed);
   } catch (err) {
     res.status(500).json({ error: err.message });
